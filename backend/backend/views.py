@@ -13,21 +13,17 @@ from django.http import HttpResponse
 import uuid
 
 class SurveyViewSet(viewsets.ModelViewSet):
+    queryset = Survey.objects.all()
+    serializer_class = SurveySerializer
+    permission_classes = [permissions.AllowAny]
+
     def get_serializer_class(self):
         if self.action == 'retrieve_public':
             return SurveyResponseSerializer
         return SurveySerializer
 
-    def get_permissions(self):
-        if self.action == 'retrieve_public':
-            return []
-        return [permissions.IsAuthenticated()]
-
-    def get_queryset(self):
-        return Survey.objects.filter(creator=self.request.user)
-
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        serializer.save(creator=self.request.user if self.request.user.is_authenticated else None)
 
     @action(detail=True, methods=['post'])
     def generate_public_link(self, request, pk=None):
@@ -80,46 +76,24 @@ class SurveyViewSet(viewsets.ModelViewSet):
         return DRFResponse(serializer.data)
 
 class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Question.objects.filter(survey__creator=self.request.user)
+    permission_classes = [permissions.AllowAny]
 
 class ResponseViewSet(viewsets.ModelViewSet):
+    queryset = Response.objects.all()
+    serializer_class = ResponseSerializer
+    permission_classes = [permissions.AllowAny]
+
     def get_serializer_class(self):
         if self.action == 'create':
             return ResponseCreateSerializer
         return ResponseSerializer
 
-    def get_permissions(self):
-        if self.action == 'create':
-            return []  # Allow anonymous responses
-        return [permissions.IsAuthenticated()]
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Response.objects.filter(survey__creator=self.request.user)
-        return Response.objects.none()
-
     def create(self, request, *args, **kwargs):
         survey_id = request.data.get('survey')
         survey = get_object_or_404(Survey, id=survey_id)
         
-        # Check if survey is active
-        if survey.status != 'active':
-            return DRFResponse(
-                {'error': 'This survey is not active'}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # If survey requires authentication, check for public link
-        if not request.user.is_authenticated and not survey.public_link:
-            return DRFResponse(
-                {'error': 'This survey requires authentication'}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
