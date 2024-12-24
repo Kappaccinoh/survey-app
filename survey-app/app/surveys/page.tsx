@@ -1,157 +1,112 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import Navigation from '../components/Navigation';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
-export default function Surveys() {
-  const { data: session } = useSession();
+export default function Dashboard() {
+//   const { data: session, status } = useSession({
+//     required: true,
+//     onUnauthenticated() {
+//       redirect('/login');
+//     },
+//   });
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <Navigation />
-      <div className="min-h-screen bg-white flex items-center justify-center pt-16">
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          {session ? (
-            // Authenticated user view
-            <div className="flex flex-col items-center">
-              <div className="text-center mb-12 w-full">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Survey Workspace</h1>
-                <p className="text-gray-500 max-w-2xl mx-auto">
-                  Create, manage, and analyze your surveys all in one place. Start collecting valuable feedback today.
-                </p>
-              </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Survey Dashboard</h1>
+          <Link
+            href="/survey/create"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Create New Survey
+          </Link>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 w-full">
-                {/* Create New Survey Card */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors group cursor-pointer">
-                  <Link href="/survey/create" className="h-full flex flex-col items-center justify-center text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Survey</h3>
-                    <p className="text-sm text-gray-500">Start from scratch or use a template</p>
-                  </Link>
+        {/* Metrics Overview */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
                 </div>
-
-                {/* Template Card */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex flex-col h-full">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Feedback</h3>
-                    <p className="text-sm text-gray-500 mb-4 flex-grow">Gather insights about your customer experience</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">10 questions</span>
-                      <Link href="/survey/template/feedback" className="text-blue-600 hover:text-blue-700">
-                        Use Template →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Employee Survey Template */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex flex-col h-full">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Employee Satisfaction</h3>
-                    <p className="text-sm text-gray-500 mb-4 flex-grow">Measure employee engagement and satisfaction</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">15 questions</span>
-                      <Link href="/survey/template/employee" className="text-blue-600 hover:text-blue-700">
-                        Use Template →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-gray-50 rounded-lg p-6 w-full">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-500">Active Surveys</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-500">Total Responses</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-500">Templates Used</div>
-                  </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Surveys</dt>
+                    <dd className="flex items-baseline">
+                      <div className="text-2xl font-semibold text-gray-900 dark:text-white">12</div>
+                    </dd>
+                  </dl>
                 </div>
               </div>
             </div>
-          ) : (
-            // Non-authenticated user view
-            <div className="flex flex-col items-center justify-center max-w-3xl mx-auto">
-              <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">
-                Create Powerful Surveys
-              </h1>
-              <p className="text-xl text-gray-500 mb-8 text-center">
-                Get started with our easy-to-use survey platform. Create, share, and analyze surveys in minutes.
-              </p>
-              <div className="space-y-4 text-center">
-                <Link
-                  href="/signup"
-                  className="inline-block px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Create Your First Survey
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Responses</dt>
+                    <dd className="flex items-baseline">
+                      <div className="text-2xl font-semibold text-gray-900 dark:text-white">1,234</div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Surveys */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+          <div className="px-4 py-5 sm:px-6">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recent Surveys</h2>
+          </div>
+          <div className="border-t border-gray-200 dark:border-gray-700">
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              {/* Sample survey items */}
+              <li className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <Link href="/survey/1" className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">
+                      Customer Satisfaction Survey
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Created on December 1, 2023
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                      Active
+                    </span>
+                  </div>
                 </Link>
-                <div className="text-sm text-gray-500 mt-4">
-                  Already have an account?{' '}
-                  <Link href="/login" className="text-blue-600 hover:text-blue-500">
-                    Sign in
-                  </Link>
-                </div>
-              </div>
-
-              {/* Features Grid */}
-              <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-                <div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Quick Setup</h3>
-                  <p className="text-sm text-gray-500">Create and launch your survey in minutes with our intuitive builder</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Real-time Analytics</h3>
-                  <p className="text-sm text-gray-500">Get instant insights with our powerful analytics dashboard</p>
-                </div>
-                <div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Ready Templates</h3>
-                  <p className="text-sm text-gray-500">Choose from our library of professional survey templates</p>
-                </div>
-              </div>
-            </div>
-          )}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 } 

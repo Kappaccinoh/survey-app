@@ -27,12 +27,6 @@ export default function Navigation() {
                   Surveys
                 </Link>
                 <Link 
-                  href="/dashboard" 
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Dashboard
-                </Link>
-                <Link 
                   href="/survey/create" 
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                 >
