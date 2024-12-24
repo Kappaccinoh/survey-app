@@ -6,35 +6,60 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
-    depends_on:
-      - backend
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NODE_ENV=development
     volumes:
       - ./survey-app:/app
       - /app/node_modules
       - /app/.next
+    depends_on:
+      - backend
 
   backend:
     build: ./backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py seed_db &&
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     environment:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - POSTGRES_DB=surveydb
+      - POSTGRES_USER=surveyuser
+      - POSTGRES_PASSWORD=password
+      - DATABASE_URL=postgres://surveyuser:password@db:5432/surveydb
     volumes:
       - ./backend:/app
+      - media_volume:/app/media
+      - static_volume:/app/static
     depends_on:
       - db
 
   db:
     image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
     environment:
       - POSTGRES_DB=surveydb
       - POSTGRES_USER=surveyuser
-      - POSTGRES_PASSWORD=surveypass
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
 
 volumes:
-  postgres_data: 
+  postgres_data:
+  media_volume:
+  static_volume: 

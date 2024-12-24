@@ -8,9 +8,11 @@ class Command(BaseCommand):
     help = 'Seeds the database with sample data'
 
     def handle(self, *args, **kwargs):
+        self.stdout.write('Starting database seed...')
+
         # Create test users
         users = [
-            User.objects.create_user(
+            User.objects.create_superuser(  # Changed to create_superuser
                 username='demo@example.com',
                 email='demo@example.com',
                 password='demo1234',
@@ -25,6 +27,7 @@ class Command(BaseCommand):
                 last_name='User'
             )
         ]
+        self.stdout.write('Created users')
 
         # Create surveys
         surveys = [
@@ -32,14 +35,14 @@ class Command(BaseCommand):
                 creator=users[0],
                 title="Customer Satisfaction Survey",
                 description="Help us improve our services by sharing your experience",
-                status='active',
+                status='published',  # Changed from 'active' to 'published'
                 public_link='cs-survey-2024'
             ),
             Survey.objects.create(
                 creator=users[0],
                 title="Employee Engagement Survey",
                 description="Annual employee feedback survey",
-                status='active',
+                status='published',  # Changed from 'active' to 'published'
                 public_link='emp-survey-2024'
             ),
             Survey.objects.create(
@@ -50,6 +53,7 @@ class Command(BaseCommand):
                 public_link='product-feedback'
             )
         ]
+        self.stdout.write('Created surveys')
 
         # Questions for Customer Satisfaction Survey
         cs_questions = [
@@ -75,6 +79,7 @@ class Command(BaseCommand):
                 order=3
             )
         ]
+        self.stdout.write('Created CS questions')
 
         # Options for multiple choice question
         satisfaction_options = [
@@ -91,6 +96,7 @@ class Command(BaseCommand):
                 text=option,
                 order=idx
             )
+        self.stdout.write('Created CS question options')
 
         # Questions for Employee Engagement Survey
         emp_questions = [
@@ -123,6 +129,7 @@ class Command(BaseCommand):
                 order=4
             )
         ]
+        self.stdout.write('Created EMP questions')
 
         # Create sample responses
         departments = ["Sales", "Marketing", "Engineering", "Customer Support", "HR"]
@@ -134,7 +141,8 @@ class Command(BaseCommand):
                 respondent_email=f"respondent{i}@example.com",
                 respondent_name=f"Respondent {i}",
                 department=random.choice(departments),
-                completed=True
+                completed=True,
+                created_at=timezone.now()  # Added created_at
             )
 
             # Multiple choice answer
@@ -157,6 +165,7 @@ class Command(BaseCommand):
                 question=cs_questions[2],
                 answer_text="Sample feedback text for improvements."
             )
+        self.stdout.write('Created CS responses')
 
         # Generate 30 responses for Employee Engagement Survey
         for i in range(30):
@@ -165,7 +174,8 @@ class Command(BaseCommand):
                 respondent_email=f"employee{i}@company.com",
                 respondent_name=f"Employee {i}",
                 department=random.choice(departments),
-                completed=True
+                completed=True,
+                created_at=timezone.now()  # Added created_at
             )
 
             # Add answers for each question
@@ -188,5 +198,6 @@ class Command(BaseCommand):
                         question=question,
                         answer_text="Sample text feedback from employee."
                     )
+        self.stdout.write('Created EMP responses')
 
         self.stdout.write(self.style.SUCCESS('Successfully seeded database'))
