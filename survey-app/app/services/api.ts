@@ -43,15 +43,33 @@ export const createSurvey = async (data: {
     options?: string[];
   }>;
 }) => {
+  // Transform the data to match backend expectations
+  const transformedData = {
+    ...data,
+    questions: data.questions.map(question => ({
+      ...question,
+      options: question.options?.map((text, index) => ({
+        text,
+        order: index
+      }))
+    }))
+  };
+
+  console.log('Sending survey data:', transformedData);
+
   const response = await fetch(`${API_BASE_URL}/surveys/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(transformedData),
   });
 
-  if (!response.ok) throw new Error('Failed to create survey');
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('Survey creation error:', errorData);
+    throw new Error('Failed to create survey');
+  }
   return response.json();
 };
 

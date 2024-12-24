@@ -75,6 +75,15 @@ class SurveyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(survey)
         return DRFResponse(serializer.data)
 
+    def create(self, request, *args, **kwargs):
+        print("Received data:", request.data)
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)
+            return DRFResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
+
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
