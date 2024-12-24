@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '../../../components/Navigation';
+import { fetchSurvey, submitSurveyResponse } from '../../../services/api';
 
 interface Question {
   id: string;
@@ -10,7 +11,11 @@ interface Question {
   question: string;
   description?: string;
   required: boolean;
-  options?: string[];
+  options?: Array<{
+    id: string;
+    text: string;
+    order: number;
+  }>;
 }
 
 interface Survey {
@@ -22,7 +27,10 @@ interface Survey {
 
 export default function RespondToSurvey() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const publicLink = searchParams.get('public');
   const router = useRouter();
+  
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -34,48 +42,24 @@ export default function RespondToSurvey() {
     department: ''
   });
 
-  // Mock data - replace with actual API call
   useEffect(() => {
-    // Simulating API call
-    setTimeout(() => {
-      setSurvey({
-        id: params.id as string,
-        title: "Customer Satisfaction Survey",
-        description: "Help us improve our services by sharing your feedback",
-        questions: [
-          {
-            id: "1",
-            type: "multiple_choice",
-            question: "How satisfied are you with our service?",
-            required: true,
-            options: [
-              "Very satisfied",
-              "Satisfied",
-              "Neutral",
-              "Dissatisfied",
-              "Very dissatisfied"
-            ]
-          },
-          {
-            id: "2",
-            type: "rating",
-            question: "How likely are you to recommend our service to others?",
-            required: true
-          },
-          {
-            id: "3",
-            type: "text",
-            question: "What improvements would you suggest for our service?",
-            required: false
-          }
-        ]
-      });
-      setLoading(false);
-    }, 1000);
-  }, [params.id]);
+    const loadSurvey = async () => {
+      try {
+        const data = await fetchSurvey(params.id as string, publicLink || undefined);
+        setSurvey(data);
+      } catch (error) {
+        setError('Failed to load survey');
+        console.error('Error loading survey:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSurvey();
+  }, [params.id, publicLink]);
 
   const handleAnswer = (answer: string) => {
-    const currentQuestionId = survey?.questions[currentQuestion].id;
+    const currentQuestionId = survey?.questions[currentQuestion - 1].id;
     if (currentQuestionId) {
       setAnswers(prev => ({
         ...prev,
@@ -89,10 +73,11 @@ export default function RespondToSurvey() {
   };
 
   const handleSubmit = async () => {
+    if (!survey) return;
+
     try {
-      // Here you would implement the actual API call
-      console.log('Submitting answers:', {
-        survey: params.id,
+      await submitSurveyResponse({
+        survey: survey.id,
         ...respondentInfo,
         answers: Object.entries(answers).map(([questionId, answer]) => ({
           question: questionId,
@@ -103,6 +88,7 @@ export default function RespondToSurvey() {
       router.push(`/surveys/${params.id}/thank-you`);
     } catch (error) {
       setError('Failed to submit survey. Please try again.');
+      console.error('Error submitting survey:', error);
     }
   };
 
@@ -110,18 +96,37 @@ export default function RespondToSurvey() {
     switch (question.type) {
       case 'multiple_choice':
         return (
-          <div className="space-y-4">
-            {question.options?.map((option, index) => (
-              <label key={index} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+          <div className="space-y-3">
+            {question.options?.map((option) => (
+              <label key={option.id} className="flex items-center">
                 <input
                   type="radio"
-                  name={question.id}
+                  name={`question-${question.id}`}
+                  value={option.text}
+                  checked={answers[question.id] === option.text}
+                  onChange={(e) => handleAnswer(e.target.value)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-gray-900">{option.text}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'yes_no':
+        return (
+          <div className="flex space-x-4">
+            {['Yes', 'No'].map((option) => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
                   value={option}
                   checked={answers[question.id] === option}
                   onChange={(e) => handleAnswer(e.target.value)}
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="text-gray-900">{option}</span>
+                <span className="ml-2 text-gray-900">{option}</span>
               </label>
             ))}
           </div>
@@ -129,15 +134,15 @@ export default function RespondToSurvey() {
 
       case 'rating':
         return (
-          <div className="flex justify-center space-x-4">
+          <div className="flex space-x-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
               <button
                 key={rating}
                 onClick={() => handleAnswer(rating.toString())}
-                className={`w-12 h-12 rounded-full ${
+                className={`w-10 h-10 rounded-full ${
                   answers[question.id] === rating.toString()
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                 }`}
               >
                 {rating}
@@ -151,29 +156,10 @@ export default function RespondToSurvey() {
           <textarea
             value={answers[question.id] || ''}
             onChange={(e) => handleAnswer(e.target.value)}
-            placeholder="Type your answer here..."
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
             rows={4}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900"
+            placeholder="Enter your answer"
           />
-        );
-
-      case 'yes_no':
-        return (
-          <div className="flex space-x-4">
-            {['Yes', 'No'].map((option) => (
-              <button
-                key={option}
-                onClick={() => handleAnswer(option)}
-                className={`px-6 py-3 rounded-lg ${
-                  answers[question.id] === option
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
         );
 
       default:

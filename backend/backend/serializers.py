@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Survey, Question, QuestionOption, Response, Answer
+from django.contrib.auth import get_user_model
 
 class QuestionOptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,13 +36,23 @@ class SurveySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions', [])
-        survey = Survey.objects.create(**validated_data)
-        for question_data in questions_data:
-            options_data = question_data.pop('options', [])
-            question = Question.objects.create(survey=survey, **question_data)
-            for option_data in options_data:
-                QuestionOption.objects.create(question=question, **option_data)
-        return survey
+        try:
+            # Hardcode the admin user as creator
+            User = get_user_model()
+            admin_user = User.objects.get(is_superuser=True)  # Gets the first superuser
+            validated_data['creator'] = admin_user
+            
+            survey = Survey.objects.create(**validated_data)
+            for question_data in questions_data:
+                options_data = question_data.pop('options', [])
+                question = Question.objects.create(survey=survey, **question_data)
+                if question.type == 'multiple_choice':
+                    for option_data in options_data:
+                        QuestionOption.objects.create(question=question, **option_data)
+            return survey
+        except Exception as e:
+            print(f"Error creating survey: {str(e)}")
+            raise serializers.ValidationError(str(e))
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
