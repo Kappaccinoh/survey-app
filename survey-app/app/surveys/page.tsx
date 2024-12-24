@@ -75,7 +75,7 @@ export default function Surveys() {
         
         {/* Public Link Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Public Link</label>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Public Link</label>
           <div className="flex items-center space-x-2">
             <input
               type="text"
@@ -143,7 +143,7 @@ export default function Surveys() {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Survey Dashboard</h1>
             <Link
-              href="/survey/create"
+              href="/surveys/create"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
               Create New Survey
@@ -162,7 +162,7 @@ export default function Surveys() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Surveys</dt>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Total Surveys</dt>
                       <dd className="flex items-baseline">
                         <div className="text-2xl font-semibold text-gray-900">{mockSurveys.length}</div>
                       </dd>
@@ -266,7 +266,7 @@ export default function Surveys() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{survey.title}</h3>
-                      <p className="text-sm text-gray-500">Created on {survey.createdAt}</p>
+                      <p className="text-sm text-gray-700">Created on {survey.createdAt}</p>
                     </div>
                     <div className="flex items-center space-x-3">
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

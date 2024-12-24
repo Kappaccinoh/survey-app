@@ -12,7 +12,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="font-bold text-xl text-blue-600">
+            <Link href="/" className="font-bold text-xl text-blue-700">
               SurveyApp
             </Link>
           </div>
@@ -22,7 +22,7 @@ export default function Navigation() {
               <>
                 <Link 
                   href="/surveys" 
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-700 hover:text-gray-900"
                 >
                   Surveys
                 </Link>
@@ -37,7 +37,7 @@ export default function Navigation() {
               <>
                 <Link 
                   href="/login" 
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-700 hover:text-gray-900"
                 >
                   Login
                 </Link>
