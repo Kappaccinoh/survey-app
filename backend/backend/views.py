@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response as DRFResponse
 from django.shortcuts import get_object_or_404
-from .models import Survey, Question, Response
+from .models import Survey, Question, Response, Answer
 from .serializers import (
     SurveySerializer, QuestionSerializer, 
     ResponseSerializer, SurveyResponseSerializer,
@@ -11,6 +11,7 @@ from .serializers import (
 import csv
 from django.http import HttpResponse
 import uuid
+from django.db.models import Count
 
 class SurveyViewSet(viewsets.ModelViewSet):
     queryset = Survey.objects.all()
@@ -83,6 +84,66 @@ class SurveyViewSet(viewsets.ModelViewSet):
             return DRFResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'])
+    def results(self, request, pk=None):
+        survey = self.get_object()
+        questions = survey.questions.all()
+        total_responses = survey.responses.filter(completed=True).count()
+
+        results = {
+            'id': survey.id,
+            'title': survey.title,
+            'totalResponses': total_responses,
+            'questions': []
+        }
+
+        for question in questions:
+            question_data = {
+                'id': question.id,
+                'type': question.type,
+                'question': question.question,
+                'responses': []
+            }
+
+            if question.type == 'multiple_choice' or question.type == 'yes_no':
+                answers = Answer.objects.filter(
+                    question=question,
+                    response__completed=True
+                ).values('answer_text').annotate(count=Count('answer_text'))
+                
+                question_data['responses'] = [
+                    {'option': answer['answer_text'], 'count': answer['count']}
+                    for answer in answers
+                ]
+
+            elif question.type == 'rating':
+                answers = Answer.objects.filter(
+                    question=question,
+                    response__completed=True
+                )
+                ratings = [int(a.answer_text) for a in answers if a.answer_text.isdigit()]
+                
+                if ratings:
+                    question_data['averageRating'] = sum(ratings) / len(ratings)
+                    question_data['distribution'] = [
+                        {'rating': i, 'count': ratings.count(i)}
+                        for i in range(1, 11)
+                    ]
+
+            else:  # text responses
+                answers = Answer.objects.filter(
+                    question=question,
+                    response__completed=True
+                )
+                question_data['responses'] = [
+                    {'answer_text': answer.answer_text}
+                    for answer in answers
+                ]
+
+            results['questions'].append(question_data)
+
+        return DRFResponse(results)
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()

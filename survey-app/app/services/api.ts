@@ -77,4 +77,10 @@ export const fetchSurveys = async () => {
   const response = await fetch(`${API_BASE_URL}/surveys/`);
   if (!response.ok) throw new Error('Failed to fetch surveys');
   return response.json();
+};
+
+export const fetchSurveyResults = async (id: string) => {
+  const response = await fetch(`${API_BASE_URL}/surveys/${id}/results/`);
+  if (!response.ok) throw new Error('Failed to fetch survey results');
+  return response.json();
 }; 

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Navigation from '../components/Navigation';
+import { fetchSurveys } from '../services/api';
 
 interface Survey {
   id: string;
@@ -12,19 +13,8 @@ interface Survey {
   status: 'active' | 'draft' | 'closed';
   responseCount: number;
   publicLink?: string;
+  description: string;
 }
-
-// Mock data (replace with API calls)
-const mockSurveys: Survey[] = [
-  {
-    id: '1',
-    title: 'Customer Satisfaction Survey',
-    createdAt: '2024-01-15',
-    status: 'active',
-    responseCount: 145,
-    publicLink: 'https://surveyapp.com/s/abc123'
-  }
-];
 
 export default function Surveys() {
   const { data: session } = useSession();
@@ -32,6 +22,25 @@ export default function Surveys() {
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [csvError, setCsvError] = useState<string | null>(null);
+  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSurveys = async () => {
+      try {
+        const data = await fetchSurveys();
+        setSurveys(data);
+      } catch (error) {
+        setError('Failed to load surveys');
+        console.error('Error loading surveys:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSurveys();
+  }, []);
 
   const handleCSVUpload = async (surveyId: string, file: File) => {
     try {
@@ -134,6 +143,36 @@ export default function Surveys() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gray-50 pt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gray-50 pt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center text-red-600">
+              {error}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Navigation />
@@ -164,7 +203,7 @@ export default function Surveys() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-700 truncate">Total Surveys</dt>
                       <dd className="flex items-baseline">
-                        <div className="text-2xl font-semibold text-gray-900">{mockSurveys.length}</div>
+                        <div className="text-2xl font-semibold text-gray-900">{surveys.length}</div>
                       </dd>
                     </dl>
                   </div>
@@ -186,7 +225,7 @@ export default function Surveys() {
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Responses</dt>
                       <dd className="flex items-baseline">
                         <div className="text-2xl font-semibold text-gray-900">
-                          {mockSurveys.reduce((acc, survey) => acc + survey.responseCount, 0)}
+                          {surveys.reduce((acc, survey) => acc + (survey.responseCount || 0), 0)}
                         </div>
                       </dd>
                     </dl>
@@ -228,7 +267,7 @@ export default function Surveys() {
                       <dt className="text-sm font-medium text-gray-500 truncate">Active Surveys</dt>
                       <dd className="flex items-baseline">
                         <div className="text-2xl font-semibold text-gray-900">
-                          {mockSurveys.filter(s => s.status === 'active').length}
+                          {surveys.filter(s => s.status === 'active').length}
                         </div>
                       </dd>
                     </dl>
@@ -260,38 +299,44 @@ export default function Surveys() {
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">Recent Surveys</h2>
             </div>
-            <ul className="divide-y divide-gray-200">
-              {mockSurveys.map((survey) => (
-                <li key={survey.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{survey.title}</h3>
-                      <p className="text-sm text-gray-700">Created on {survey.createdAt}</p>
+            {surveys.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                No surveys created yet. Create your first survey!
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {surveys.map((survey) => (
+                  <li key={survey.id} className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{survey.title}</h3>
+                        <p className="text-sm text-gray-700">Created on {new Date(survey.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {survey.responseCount} responses
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSurvey(survey);
+                            setShowModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          Share
+                        </button>
+                        <Link
+                          href={`/surveys/${survey.id}/results`}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          View Results
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {survey.responseCount} responses
-                      </span>
-                      <button
-                        onClick={() => {
-                          setSelectedSurvey(survey);
-                          setShowModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        Share
-                      </button>
-                      <Link
-                        href={`/surveys/${survey.id}/results`}
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        View Results
-                      </Link>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>

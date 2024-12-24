@@ -1,82 +1,73 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navigation from '../../../components/Navigation';
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { fetchSurveyResults } from '../../../services/api';
 
-// Mock results data (replace with actual API call)
-const mockResults = {
-  totalResponses: 150,
-  questions: [
-    {
-      id: 1,
-      type: 'multiple_choice',
-      question: 'How satisfied are you with our service?',
-      responses: [
-        { option: 'Very satisfied', count: 75 },
-        { option: 'Satisfied', count: 45 },
-        { option: 'Neutral', count: 20 },
-        { option: 'Dissatisfied', count: 8 },
-        { option: 'Very dissatisfied', count: 2 }
-      ]
-    },
-    {
-      id: 2,
-      type: 'rating',
-      question: 'How likely are you to recommend our service to others?',
-      averageRating: 8.5,
-      distribution: [
-        { rating: 10, count: 50 },
-        { rating: 9, count: 35 },
-        { rating: 8, count: 30 },
-        { rating: 7, count: 20 },
-        { rating: 6, count: 10 },
-        { rating: 5, count: 5 }
-      ]
-    },
-    {
-      id: 3,
-      type: 'text',
-      question: 'What improvements would you suggest for our service?',
-      responses: [
-        "Better mobile app interface",
-        "Faster response times",
-        "More customization options"
-      ]
-    }
-  ]
-};
+interface QuestionResult {
+  id: number;
+  type: 'multiple_choice' | 'text' | 'rating' | 'yes_no';
+  question: string;
+  responses: Array<{
+    option?: string;
+    count?: number;
+    answer_text?: string;
+  }>;
+  averageRating?: number;
+  distribution?: Array<{
+    rating: number;
+    count: number;
+  }>;
+}
+
+interface SurveyResults {
+  id: string;
+  title: string;
+  totalResponses: number;
+  questions: QuestionResult[];
+}
 
 export default function SurveyResults() {
-  // const { data: session } = useSession({
-  //   required: true,
-  //   onUnauthenticated() {
-  //     redirect('/login');
-  //   },
-  // });
-  
   const params = useParams();
   const router = useRouter();
+  const [results, setResults] = useState<SurveyResults | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const renderQuestionResults = (question: any) => {
+  useEffect(() => {
+    const loadResults = async () => {
+      try {
+        const data = await fetchSurveyResults(params.id as string);
+        setResults(data);
+      } catch (error) {
+        setError('Failed to load survey results');
+        console.error('Error loading results:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResults();
+  }, [params.id]);
+
+  const renderQuestionResults = (question: QuestionResult) => {
     switch (question.type) {
       case 'multiple_choice':
         return (
           <div className="space-y-4">
-            {question.responses.map((response: any, index: number) => (
+            {question.responses.map((response, index) => (
               <div key={index} className="relative">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-gray-800">{response.option}</span>
                   <span className="text-sm text-gray-700">
-                    {Math.round((response.count / mockResults.totalResponses) * 100)}%
+                    {Math.round((response.count! / results!.totalResponses) * 100)}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
                     className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${(response.count / mockResults.totalResponses) * 100}%` }}
+                    style={{ width: `${(response.count! / results!.totalResponses) * 100}%` }}
                   />
                 </div>
               </div>
@@ -92,7 +83,7 @@ export default function SurveyResults() {
               <span className="text-gray-500 ml-2">average rating</span>
             </div>
             <div className="space-y-3">
-              {question.distribution.map((item: any) => (
+              {question.distribution?.map((item) => (
                 <div key={item.rating} className="relative">
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium text-gray-700">{item.rating} stars</span>
@@ -101,7 +92,7 @@ export default function SurveyResults() {
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div
                       className="bg-blue-600 h-2.5 rounded-full"
-                      style={{ width: `${(item.count / mockResults.totalResponses) * 100}%` }}
+                      style={{ width: `${(item.count / results!.totalResponses) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -113,9 +104,31 @@ export default function SurveyResults() {
       case 'text':
         return (
           <div className="space-y-4">
-            {question.responses.map((response: string, index: number) => (
+            {question.responses.map((response, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-gray-800">{response}</p>
+                <p className="text-gray-800">{response.answer_text}</p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'yes_no':
+        return (
+          <div className="space-y-4">
+            {question.responses.map((response, index) => (
+              <div key={index} className="relative">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-gray-800">{response.option}</span>
+                  <span className="text-sm text-gray-700">
+                    {Math.round((response.count! / results!.totalResponses) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(response.count! / results!.totalResponses) * 100}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -125,6 +138,36 @@ export default function SurveyResults() {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gray-50 pt-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !results) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gray-50 pt-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center text-red-600">
+              {error || 'Failed to load survey results'}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -136,18 +179,8 @@ export default function SurveyResults() {
               onClick={() => router.push('/surveys')}
               className="flex items-center text-gray-600 hover:text-gray-900"
             >
-              <svg 
-                className="w-5 h-5 mr-2" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-                />
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to Surveys
             </button>
@@ -157,16 +190,16 @@ export default function SurveyResults() {
             {/* Header */}
             <div className="px-6 py-4 border-b">
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">Survey Results</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{results.title}</h1>
                 <div className="text-gray-500">
-                  Total Responses: <span className="font-semibold">{mockResults.totalResponses}</span>
+                  Total Responses: <span className="font-semibold">{results.totalResponses}</span>
                 </div>
               </div>
             </div>
 
             {/* Results */}
             <div className="px-6 py-8 space-y-12">
-              {mockResults.questions.map((question, index) => (
+              {results.questions.map((question, index) => (
                 <div key={question.id} className="space-y-4">
                   <h2 className="text-xl font-medium text-gray-900">
                     {index + 1}. {question.question}
