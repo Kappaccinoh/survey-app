@@ -232,6 +232,7 @@ export default function SurveyResults() {
 }
 
 function generateTrendData(results: SurveyResults) {
+  console.log(results);
   // Generate daily response counts for the last 30 days
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

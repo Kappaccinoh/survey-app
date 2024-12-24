@@ -3,13 +3,19 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-interface SurveyResults {
-    questions: {
-      question: string;
-      responses: any[];  // Update this type based on your actual response structure
-    }[];
-    totalResponses: number;
-  }
+// interface SurveyResponse {
+//     id: number;
+//     answer: string;
+//     created_at: string;
+// }
+
+// interface SurveyResults {
+//     questions: {
+//       question: string;
+//       responses: SurveyResponse[];  // Update this type based on your actual response structure
+//     }[];
+//     totalResponses: number;
+// }
 
 interface SurveyCompletion {
   name: string;
@@ -239,12 +245,12 @@ function findLowestPerforming(data: SurveyCompletion[]): string {
   ).name;
 }
 
-function generateCompletionData(results: SurveyResults) {
-  return results.questions.map(q => ({
-    name: q.question.length > 40 
-      ? q.question.slice(0, 40) + '...'
-      : q.question,
-    completed: q.responses.length,
-    incomplete: results.totalResponses - q.responses.length
-  }));
-} 
+// function generateCompletionData(results: SurveyResults) {
+//   return results.questions.map(q => ({
+//     name: q.question.length > 40 
+//       ? q.question.slice(0, 40) + '...'
+//       : q.question,
+//     completed: q.responses.length,
+//     incomplete: results.totalResponses - q.responses.length
+//   }));
+// } 

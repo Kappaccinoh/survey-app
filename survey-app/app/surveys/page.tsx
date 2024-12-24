@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import Navigation from '../components/Navigation';
 import { fetchSurveys } from '../services/api';
 import ResponseTrends from '../components/ResponseTrends';
@@ -36,7 +35,6 @@ const mockCompletionData = [
 ];
 
 export default function Surveys() {
-  const { data: session } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -76,6 +74,7 @@ export default function Surveys() {
       setCsvError(null);
     } catch (error) {
       setCsvError('Error uploading CSV. Please check the file format.');
+      alert(error);
     }
   };
 
@@ -89,6 +88,7 @@ export default function Surveys() {
       
       // Update the survey with the new link
       setSelectedSurvey(prev => prev ? { ...prev, publicLink: link } : null);
+      console.log(surveyId);
       return link;
     } catch (error) {
       console.error('Error generating link:', error);

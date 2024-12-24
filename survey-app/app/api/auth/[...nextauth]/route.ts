@@ -14,7 +14,7 @@ const handler = NextAuth({
     signIn: '/signup',
   },
   callbacks: {
-    async session({ session, token }) {
+    async session({ session }) {
       return session;
     },
     async jwt({ token, user, account }) {

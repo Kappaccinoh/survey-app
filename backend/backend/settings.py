@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-8=j3=1c7%r8hoeiddg)et=mdis54%zb&5jm7*50olmm9rai7-r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
 
 
 # Application definition
@@ -84,7 +84,7 @@ DATABASES = {
         'USER': 'surveyuser',
         'PASSWORD': 'password',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': 5432,
     }
 }
 
@@ -132,6 +132,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://frontend:3000",
 ]
 
 REST_FRAMEWORK = {

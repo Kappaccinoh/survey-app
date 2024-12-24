@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
 import Navigation from '../../components/Navigation';
 
 type Question = {
@@ -37,7 +36,6 @@ const mockSurvey = {
 };
 
 export default function SurveyPage() {
-  const params = useParams();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
 

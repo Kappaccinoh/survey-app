@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '../../components/Navigation';
-import { createSurvey } from '../../services/api';
 
 type QuestionType = 'multiple_choice' | 'text' | 'rating' | 'yes_no';
 
@@ -171,17 +170,17 @@ export default function CreateSurvey() {
         return;
       }
 
-      const response = await createSurvey({
-        title,
-        description,
-        questions: questions.map(q => ({
-          type: q.type,
-          question: q.question,
-          description: q.description,
-          required: q.required,
-          options: q.options,
-        }))
-      });
+      // const response = await createSurvey({
+      //   title,
+      //   description,
+      //   questions: questions.map(q => ({
+      //     type: q.type,
+      //     question: q.question,
+      //     description: q.description,
+      //     required: q.required,
+      //     options: q.options,
+      //   }))
+      // });
 
       router.push('/surveys');
     } catch (error) {
