@@ -170,19 +170,27 @@ export default function CreateSurvey() {
         return;
       }
 
-      // const response = await createSurvey({
-      //   title,
-      //   description,
-      //   questions: questions.map(q => ({
-      //     type: q.type,
-      //     question: q.question,
-      //     description: q.description,
-      //     required: q.required,
-      //     options: q.options,
-      //   }))
-      // });
+      const response = await fetch('http://localhost:8000/api/surveys/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          questions: questions.map(q => ({
+            type: q.type,
+            question: q.question,
+            description: q.description,
+            required: q.required,
+            options: q.options,
+          }))
+        })
+      });
 
-      router.push('/surveys');
+      if (response.ok) {
+        router.push('/surveys');
+      }
     } catch (error) {
       setError('Failed to save survey. Please try again.');
       console.error('Error saving survey:', error);

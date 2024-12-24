@@ -12,6 +12,7 @@ import csv
 from django.http import HttpResponse
 import uuid
 from django.db.models import Count
+from django.contrib.auth.models import User
 
 class SurveyViewSet(viewsets.ModelViewSet):
     queryset = Survey.objects.all()
@@ -24,7 +25,10 @@ class SurveyViewSet(viewsets.ModelViewSet):
         return SurveySerializer
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user if self.request.user.is_authenticated else None)
+        # Set the creator to the first user (for now)
+        # In production, this should be the authenticated user
+        creator = User.objects.first()
+        serializer.save(creator=creator)
 
     @action(detail=True, methods=['post'])
     def generate_public_link(self, request, pk=None):
