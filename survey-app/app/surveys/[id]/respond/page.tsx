@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '../../../components/Navigation';
+import { fetchSurvey, submitSurveyResponse } from '../../../services/api';
 
 interface Question {
   id: string;
@@ -22,7 +23,10 @@ interface Survey {
 
 export default function RespondToSurvey() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const publicLink = searchParams.get('public');
   const router = useRouter();
+  
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -34,48 +38,24 @@ export default function RespondToSurvey() {
     department: ''
   });
 
-  // Mock data - replace with actual API call
   useEffect(() => {
-    // Simulating API call
-    setTimeout(() => {
-      setSurvey({
-        id: params.id as string,
-        title: "Customer Satisfaction Survey",
-        description: "Help us improve our services by sharing your feedback",
-        questions: [
-          {
-            id: "1",
-            type: "multiple_choice",
-            question: "How satisfied are you with our service?",
-            required: true,
-            options: [
-              "Very satisfied",
-              "Satisfied",
-              "Neutral",
-              "Dissatisfied",
-              "Very dissatisfied"
-            ]
-          },
-          {
-            id: "2",
-            type: "rating",
-            question: "How likely are you to recommend our service to others?",
-            required: true
-          },
-          {
-            id: "3",
-            type: "text",
-            question: "What improvements would you suggest for our service?",
-            required: false
-          }
-        ]
-      });
-      setLoading(false);
-    }, 1000);
-  }, [params.id]);
+    const loadSurvey = async () => {
+      try {
+        const data = await fetchSurvey(params.id as string, publicLink || undefined);
+        setSurvey(data);
+      } catch (error) {
+        setError('Failed to load survey');
+        console.error('Error loading survey:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSurvey();
+  }, [params.id, publicLink]);
 
   const handleAnswer = (answer: string) => {
-    const currentQuestionId = survey?.questions[currentQuestion].id;
+    const currentQuestionId = survey?.questions[currentQuestion - 1].id;
     if (currentQuestionId) {
       setAnswers(prev => ({
         ...prev,
@@ -89,10 +69,11 @@ export default function RespondToSurvey() {
   };
 
   const handleSubmit = async () => {
+    if (!survey) return;
+
     try {
-      // Here you would implement the actual API call
-      console.log('Submitting answers:', {
-        survey: params.id,
+      await submitSurveyResponse({
+        survey: survey.id,
         ...respondentInfo,
         answers: Object.entries(answers).map(([questionId, answer]) => ({
           question: questionId,
@@ -103,6 +84,7 @@ export default function RespondToSurvey() {
       router.push(`/surveys/${params.id}/thank-you`);
     } catch (error) {
       setError('Failed to submit survey. Please try again.');
+      console.error('Error submitting survey:', error);
     }
   };
 

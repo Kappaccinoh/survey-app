@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '../../components/Navigation';
+import { createSurvey } from '../../services/api';
 
 type QuestionType = 'multiple_choice' | 'text' | 'rating' | 'yes_no';
 
@@ -21,6 +22,7 @@ export default function CreateSurvey() {
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentEdit, setCurrentEdit] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const addQuestion = (type: QuestionType) => {
     const newQuestion: Question = {
@@ -89,7 +91,7 @@ export default function CreateSurvey() {
               value={question.description || ''}
               onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
               placeholder="Add a description (optional)"
-              className="w-full text-sm text-gray-700 p-2 border rounded"
+              className="w-full text-sm text-gray-800 p-2 border rounded"
             />
           </div>
           <button
@@ -110,7 +112,7 @@ export default function CreateSurvey() {
               onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
-            <span className="ml-2 text-sm text-gray-600">Required question</span>
+            <span className="ml-2 text-sm text-gray-800">Required question</span>
           </label>
         </div>
 
@@ -158,9 +160,34 @@ export default function CreateSurvey() {
   };
 
   const handleSave = async () => {
-    // Here you would implement the actual save logic
-    console.log({ title, description, questions });
-    router.push('/surveys');
+    try {
+      if (!title) {
+        setError('Please enter a survey title');
+        return;
+      }
+
+      if (questions.length === 0) {
+        setError('Please add at least one question');
+        return;
+      }
+
+      const response = await createSurvey({
+        title,
+        description,
+        questions: questions.map(q => ({
+          type: q.type,
+          question: q.question,
+          description: q.description,
+          required: q.required,
+          options: q.options,
+        }))
+      });
+
+      router.push('/surveys');
+    } catch (error) {
+      setError('Failed to save survey. Please try again.');
+      console.error('Error saving survey:', error);
+    }
   };
 
   return (
@@ -174,13 +201,13 @@ export default function CreateSurvey() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Survey Title"
-              className="w-full text-2xl font-bold mb-4 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              className="w-full text-2xl font-bold mb-4 p-2 border rounded focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
             />
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Survey Description"
-              className="w-full text-gray-600 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              className="w-full text-gray-800 p-2 border rounded focus:ring-2 focus:ring-blue-500"
               rows={3}
             />
           </div>
@@ -222,11 +249,18 @@ export default function CreateSurvey() {
             </div>
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800">{error}</p>
+            </div>
+          )}
+
           {/* Save Button */}
           <div className="flex justify-end space-x-4">
             <button
               onClick={() => router.push('/surveys')}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-800"
             >
               Cancel
             </button>
