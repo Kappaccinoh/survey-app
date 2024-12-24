@@ -6,12 +6,12 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Dashboard() {
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect('/login');
-    },
-  });
+//   const { data: session, status } = useSession({
+//     required: true,
+//     onUnauthenticated() {
+//       redirect('/login');
+//     },
+//   });
 
   if (status === "loading") {
     return (
