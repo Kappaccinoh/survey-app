@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navigation from '../../../components/Navigation';
 import { fetchSurveyResults } from '../../../services/api';
+import ResponseTrends from '../../../components/ResponseTrends';
+import CompletionRates from '../../../components/CompletionRates';
 
 interface QuestionResult {
   id: number;
@@ -173,7 +175,7 @@ export default function SurveyResults() {
     <>
       <Navigation />
       <div className="min-h-screen bg-white pt-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-6">
             <button
               onClick={() => router.push('/surveys')}
@@ -186,9 +188,8 @@ export default function SurveyResults() {
             </button>
           </div>
 
-          <div className="bg-white shadow rounded-lg">
-            {/* Header */}
-            <div className="px-6 py-4 border-b">
+          <div className="space-y-8">
+            <div className="bg-white shadow rounded-lg px-6 py-4">
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900">{results.title}</h1>
                 <div className="text-gray-500">
@@ -197,20 +198,58 @@ export default function SurveyResults() {
               </div>
             </div>
 
-            {/* Results */}
-            <div className="px-6 py-8 space-y-12">
-              {results.questions.map((question, index) => (
-                <div key={question.id} className="space-y-4">
-                  <h2 className="text-xl font-medium text-gray-900">
-                    {index + 1}. {question.question}
-                  </h2>
-                  {renderQuestionResults(question)}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <div className="bg-white shadow rounded-lg p-8">
+                <div className="h-[500px]">
+                  <ResponseTrends data={generateTrendData(results)} />
                 </div>
-              ))}
+              </div>
+
+              <div className="bg-white shadow rounded-lg p-8">
+                <div className="h-[500px]">
+                  <CompletionRates data={generateCompletionData(results)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-8 py-8 space-y-12">
+                {results.questions.map((question, index) => (
+                  <div key={question.id} className="space-y-4">
+                    <h2 className="text-xl font-medium text-gray-900">
+                      {index + 1}. {question.question}
+                    </h2>
+                    {renderQuestionResults(question)}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </>
   );
+}
+
+function generateTrendData(results: SurveyResults) {
+  // Generate daily response counts for the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(thirtyDaysAgo);
+    date.setDate(date.getDate() + i);
+    return {
+      date,
+      count: Math.floor(Math.random() * 20) + 1 // Replace with actual data
+    };
+  });
+}
+
+function generateCompletionData(results: SurveyResults) {
+  return results.questions.map(q => ({
+    name: q.question.slice(0, 20) + '...',
+    completed: q.responses.length,
+    incomplete: results.totalResponses - q.responses.length
+  }));
 } 

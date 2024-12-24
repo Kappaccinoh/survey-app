@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Navigation from '../components/Navigation';
 import { fetchSurveys } from '../services/api';
+import ResponseTrends from '../components/ResponseTrends';
+import CompletionRates from '../components/CompletionRates';
 
 interface Survey {
   id: string;
@@ -15,6 +17,23 @@ interface Survey {
   publicLink?: string;
   description: string;
 }
+
+const mockTrendData = [
+  { date: new Date('2024-01-01'), count: 10 },
+  { date: new Date('2024-01-02'), count: 15 },
+  { date: new Date('2024-01-03'), count: 12 },
+  { date: new Date('2024-01-04'), count: 25 },
+  { date: new Date('2024-01-05'), count: 20 },
+  { date: new Date('2024-01-06'), count: 30 },
+  { date: new Date('2024-01-07'), count: 35 },
+];
+
+const mockCompletionData = [
+  { name: 'Customer Survey', completed: 85, incomplete: 15 },
+  { name: 'Employee Feedback', completed: 92, incomplete: 8 },
+  { name: 'Product Review', completed: 78, incomplete: 22 },
+  { name: 'Event Feedback', completed: 95, incomplete: 5 },
+];
 
 export default function Surveys() {
   const { data: session } = useSession();
@@ -80,21 +99,21 @@ export default function Surveys() {
   const ShareModal = ({ survey, onClose }: { survey: Survey; onClose: () => void }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Share Survey</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">Share Survey</h3>
         
         {/* Public Link Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-800 mb-2">Public Link</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Public Link</label>
           <div className="flex items-center space-x-2">
             <input
               type="text"
               value={survey.publicLink || 'No link generated'}
               readOnly
-              className="flex-1 p-2 border rounded-lg text-sm text-gray-600 bg-gray-50"
+              className="flex-1 p-2 border rounded-lg text-gray-800 bg-gray-50"
             />
             <button
               onClick={() => generatePublicLink(survey.id)}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
             >
               Generate
             </button>
@@ -103,7 +122,7 @@ export default function Surveys() {
 
         {/* CSV Upload Section */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Upload Respondents (CSV)</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Upload Respondents (CSV)</label>
           <div className="flex items-center space-x-2">
             <input
               type="file"
@@ -117,7 +136,7 @@ export default function Surveys() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm flex items-center"
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-800 text-sm font-medium flex items-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -126,7 +145,7 @@ export default function Surveys() {
             </button>
           </div>
           {csvError && <p className="mt-2 text-sm text-red-600">{csvError}</p>}
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-sm text-gray-700">
             CSV format: email, name, department (header row required)
           </p>
         </div>
@@ -134,7 +153,7 @@ export default function Surveys() {
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-800 text-sm font-medium"
           >
             Close
           </button>
@@ -281,16 +300,12 @@ export default function Surveys() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Response Trends</h2>
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                Chart placeholder - Response trends over time
-              </div>
+              <ResponseTrends data={mockTrendData} />
             </div>
 
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Completion Rates</h2>
-              <div className="h-64 flex items-center justify-center text-gray-500">
-                Chart placeholder - Survey completion rates
-              </div>
+              <CompletionRates data={mockCompletionData} />
             </div>
           </div>
 
@@ -310,25 +325,45 @@ export default function Surveys() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">{survey.title}</h3>
-                        <p className="text-sm text-gray-700">Created on {new Date(survey.createdAt).toLocaleDateString()}</p>
+                        <div className="flex items-center space-x-3 mt-1">
+                          <p className="text-sm text-gray-600">
+                            Created on {new Date(survey.createdAt).toLocaleDateString()}
+                          </p>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium
+                            ${survey.status === 'active' 
+                              ? 'bg-blue-50 text-blue-700' 
+                              : survey.status === 'draft'
+                              ? 'bg-gray-100 text-gray-700'
+                              : 'bg-yellow-50 text-yellow-700'
+                            }`}
+                          >
+                            {survey.status.charAt(0).toUpperCase() + survey.status.slice(1)}
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700">
+                            {survey.responseCount} {survey.responseCount === 1 ? 'response' : 'responses'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {survey.responseCount} responses
-                        </span>
+                      <div className="flex items-center space-x-4">
                         <button
                           onClick={() => {
                             setSelectedSurvey(survey);
                             setShowModal(true);
                           }}
-                          className="text-blue-600 hover:text-blue-700"
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
+                          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
                           Share
                         </button>
                         <Link
                           href={`/surveys/${survey.id}/results`}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
+                          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
                           View Results
                         </Link>
                       </div>

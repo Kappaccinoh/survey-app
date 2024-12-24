@@ -89,7 +89,14 @@ class SurveyViewSet(viewsets.ModelViewSet):
     def results(self, request, pk=None):
         survey = self.get_object()
         questions = survey.questions.all()
-        total_responses = survey.responses.filter(completed=True).count()
+        
+        # Get all completed responses for this survey
+        total_responses = Response.objects.filter(
+            survey=survey, 
+            completed=True
+        ).count()
+
+        print(f"Debug - Total responses for survey {survey.id}: {total_responses}")  # Add debug log
 
         results = {
             'id': survey.id,
@@ -164,7 +171,11 @@ class ResponseViewSet(viewsets.ModelViewSet):
         survey_id = request.data.get('survey')
         survey = get_object_or_404(Survey, id=survey_id)
         
-        serializer = self.get_serializer(data=request.data)
+        # Set completed flag to True when creating response
+        data = request.data.copy()
+        data['completed'] = True
+        
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         
