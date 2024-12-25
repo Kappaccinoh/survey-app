@@ -9,6 +9,7 @@ done
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate
+python manage.py seed_db
 
 # Start server
 echo "Starting server..."

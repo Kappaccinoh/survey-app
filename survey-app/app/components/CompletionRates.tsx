@@ -3,49 +3,49 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-// interface SurveyResponse {
-//     id: number;
-//     answer: string;
-//     created_at: string;
-// }
-
-// interface SurveyResults {
-//     questions: {
-//       question: string;
-//       responses: SurveyResponse[];  // Update this type based on your actual response structure
-//     }[];
-//     totalResponses: number;
-// }
-
 interface SurveyCompletion {
   name: string;
   completed: number;
   incomplete: number;
 }
 
-interface Props {
-  data: SurveyCompletion[];
+function calculateAverageCompletion(data: SurveyCompletion[]): number {
+  if (!data || data.length === 0) return 0;
+  return Math.round(
+    data.reduce((sum, d) => sum + (d.completed / (d.completed + d.incomplete) * 100), 0) / data.length
+  );
 }
 
-export default function CompletionRates({ data }: { data : SurveyCompletion[]}) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-gray-600">No completion data available</p>
-      </div>
-    );
-  }
+function findHighestPerforming(data: SurveyCompletion[]): string {
+  if (!data || data.length === 0) return 'No data';
+  
+  return data.reduce((prev, curr) => {
+    const prevRate = prev.completed / (prev.completed + prev.incomplete);
+    const currRate = curr.completed / (curr.completed + curr.incomplete);
+    return currRate > prevRate ? curr : prev;
+  }).name;
+}
 
+function findLowestPerforming(data: SurveyCompletion[]): string {
+  if (!data || data.length === 0) return 'No data';
+  
+  return data.reduce((prev, curr) => 
+    (curr.completed / (curr.completed + curr.incomplete)) < 
+    (prev.completed / (prev.completed + prev.incomplete)) ? curr : prev
+  ).name;
+}
+
+export default function CompletionRates({ data }: { data: SurveyCompletion[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (!svgRef.current || !data.length) return;
+    if (!svgRef.current || !data || !data.length) return;
 
     // Clear any existing chart
     d3.select(svgRef.current).selectAll('*').remove();
 
-    // Set dimensions with better margins
-    const margin = { top: 30, right: 30, bottom: 140, left: 50 }; // Increased bottom margin more
+    // Set dimensions
+    const margin = { top: 30, right: 30, bottom: 140, left: 50 };
     const width = svgRef.current.clientWidth - margin.left - margin.right;
     const height = svgRef.current.clientHeight - margin.top - margin.bottom;
 
@@ -53,53 +53,44 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Create scales with more padding between bars
+    // Create scales
     const x = d3.scaleBand()
       .domain(data.map(d => d.name))
       .range([0, width])
-      .padding(0.4); // Increased padding for better spacing
+      .padding(0.4);
 
     const y = d3.scaleLinear()
       .domain([0, 100])
       .nice()
       .range([height, 0]);
 
-    // Add axes with grid lines
+    // Add axes
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(x).tickSize(0))
       .selectAll('text')
       .remove();
 
-    // Add vertical grid lines
+    // Grid lines
     svg.append('g')
       .attr('class', 'grid')
       .attr('opacity', 0.1)
       .attr('transform', `translate(0,${height})`)
-      .call(
-        d3.axisBottom(x)
-          .tickSize(-height)
-          .tickFormat(() => '')
-      );
+      .call(d3.axisBottom(x).tickSize(-height).tickFormat(() => ''));
 
-    // Add horizontal grid lines with more emphasis
     svg.append('g')
       .attr('class', 'grid')
-      .attr('opacity', 0.2)  // Slightly more visible than vertical lines
-      .call(
-        d3.axisLeft(y)
-          .tickSize(-width)
-          .tickFormat(() => '')
-      );
+      .attr('opacity', 0.2)
+      .call(d3.axisLeft(y).tickSize(-width).tickFormat(() => ''));
 
-    // Add y-axis with more emphasis
+    // Y-axis
     svg.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%'))
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d => `${d}%`))
       .attr('class', 'text-gray-600')
       .selectAll('text')
       .style('font-size', '12px');
 
-    // Add bottom border line
+    // Bottom border
     svg.append('line')
       .attr('x1', 0)
       .attr('x2', width)
@@ -108,7 +99,7 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .attr('stroke', '#e5e7eb')
       .attr('stroke-width', 1);
 
-    // Add axis labels
+    // Axis labels
     svg.append('text')
       .attr('transform', `translate(${width/2}, ${height + 90})`)
       .style('text-anchor', 'middle')
@@ -123,7 +114,7 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .attr('class', 'text-gray-600 text-sm')
       .text('Completion Rate (%)');
 
-    // Add bars with gradient
+    // Gradient for bars
     const gradient = svg.append('defs')
       .append('linearGradient')
       .attr('id', 'bar-gradient')
@@ -137,7 +128,7 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .attr('offset', '100%')
       .attr('stop-color', '#60a5fa');
 
-    // Add bars
+    // Add and animate bars
     const bars = svg.selectAll('rect')
       .data(data)
       .join('rect')
@@ -147,13 +138,12 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .attr('y', height)
       .attr('height', 0);
 
-    // Animate bars
     bars.transition()
       .duration(1000)
       .attr('y', d => y(d.completed / (d.completed + d.incomplete) * 100))
       .attr('height', d => height - y(d.completed / (d.completed + d.incomplete) * 100));
 
-    // Add value labels
+    // Value labels
     svg.selectAll('.value-label')
       .data(data)
       .join('text')
@@ -165,19 +155,18 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
       .style('font-weight', '500')
       .text(d => `${Math.round(d.completed / (d.completed + d.incomplete) * 100)}%`);
 
-    // Add custom labels under bars
+    // Custom labels
     svg.append('g')
       .attr('class', 'x-axis-labels')
       .selectAll('text')
       .data(data)
       .join('text')
       .attr('x', d => (x(d.name) || 0) + x.bandwidth() / 2)
-      .attr('y', height + 20) // Position below axis
+      .attr('y', height + 20)
       .attr('text-anchor', 'middle')
       .attr('class', 'text-gray-600')
       .style('font-size', '12px')
       .each(function(d) {
-        // Split text into multiple lines if needed
         const text = d3.select(this);
         const words = d.name.split(' ');
         const lineHeight = 15;
@@ -206,6 +195,14 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
 
   }, [data]);
 
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-gray-600">No completion data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full">
       <div className="mb-6">
@@ -232,36 +229,3 @@ export default function CompletionRates({ data }: { data : SurveyCompletion[]}) 
     </div>
   );
 }
-
-function calculateAverageCompletion(data: SurveyCompletion[]): number {
-  return Math.round(
-    data.reduce((sum, d) => sum + (d.completed / (d.completed + d.incomplete) * 100), 0) / data.length
-  );
-}
-
-function findHighestPerforming(data: SurveyCompletion[]): string {
-  if (!data || data.length === 0) return 'No data';  // Add this check
-  
-  return data.reduce((prev, curr) => {
-    const prevRate = prev.completed / (prev.completed + prev.incomplete);
-    const currRate = curr.completed / (curr.completed + curr.incomplete);
-    return currRate > prevRate ? curr : prev;
-  }).name;
-}
-
-function findLowestPerforming(data: SurveyCompletion[]): string {
-  return data.reduce((prev, curr) => 
-    (curr.completed / (curr.completed + curr.incomplete)) < 
-    (prev.completed / (prev.completed + prev.incomplete)) ? curr : prev
-  ).name;
-}
-
-// function generateCompletionData(results: SurveyResults) {
-//   return results.questions.map(q => ({
-//     name: q.question.length > 40 
-//       ? q.question.slice(0, 40) + '...'
-//       : q.question,
-//     completed: q.responses.length,
-//     incomplete: results.totalResponses - q.responses.length
-//   }));
-// } 

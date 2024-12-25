@@ -100,8 +100,6 @@ export default function Surveys() {
       if (!response.ok) {
         throw new Error('Failed to generate public link');
       }
-
-      const updatedSurvey = await response.json();
       
       // Update local state
       setSelectedSurvey(prev => prev ? { ...prev, publicLink: publicPath } : null);

@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Set working directory
-WORKDIR /app
+WORKDIR /survey-app
 
 # Install dependencies first (for better caching)
 COPY package*.json ./
