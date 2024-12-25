@@ -6,8 +6,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NODE_ENV=development
+      - NEXTAUTH_SECRET=esKauTs3L1nd38nH0ruC7tA9jpKnsoqeEXhCsJkRE0w=
+      - NEXTAUTH_URL=http://localhost:3000
     volumes:
       - ./survey-app:/app
       - /app/node_modules

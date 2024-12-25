@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+console.log('API_URL:', process.env.NEXT_PUBLIC_API_URL);
+console.log('Final API_URL:', API_URL);
 
 export const api = {
   surveys: {
@@ -38,7 +40,7 @@ export const submitSurveyResponse = async (data: {
     answer_text: string;
   }>;
 }) => {
-  const response = await fetch(`${API_URL}/responses/`, {
+  const response = await fetch(`${API_URL}/api/responses/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
