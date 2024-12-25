@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '../../components/Navigation';
+import { api } from '@/app/services/api';
 
 type QuestionType = 'multiple_choice' | 'text' | 'rating' | 'yes_no';
 
@@ -170,7 +171,7 @@ export default function CreateSurvey() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/surveys/', {
+      const response = await fetch(api.surveys.create(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -27,7 +27,15 @@ interface Props {
   data: SurveyCompletion[];
 }
 
-export default function CompletionRates({ data }: Props) {
+export default function CompletionRates({ data }: { data : SurveyCompletion[]}) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-gray-600">No completion data available</p>
+      </div>
+    );
+  }
+
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -232,10 +240,13 @@ function calculateAverageCompletion(data: SurveyCompletion[]): number {
 }
 
 function findHighestPerforming(data: SurveyCompletion[]): string {
-  return data.reduce((prev, curr) => 
-    (curr.completed / (curr.completed + curr.incomplete)) > 
-    (prev.completed / (prev.completed + prev.incomplete)) ? curr : prev
-  ).name;
+  if (!data || data.length === 0) return 'No data';  // Add this check
+  
+  return data.reduce((prev, curr) => {
+    const prevRate = prev.completed / (prev.completed + prev.incomplete);
+    const currRate = curr.completed / (curr.completed + curr.incomplete);
+    return currRate > prevRate ? curr : prev;
+  }).name;
 }
 
 function findLowestPerforming(data: SurveyCompletion[]): string {

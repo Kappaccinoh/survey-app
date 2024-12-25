@@ -83,7 +83,7 @@ DATABASES = {
         'NAME': 'surveydb',
         'USER': 'surveyuser',
         'PASSWORD': 'password',
-        'HOST': 'db',
+        'HOST': 'localhost',
         'PORT': 5432,
     }
 }

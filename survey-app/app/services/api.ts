@@ -1,9 +1,27 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export const api = {
+  surveys: {
+    list: () => `${API_URL}/api/surveys/`,
+    create: () => `${API_URL}/api/surveys/`,
+    get: (id: string) => `${API_URL}/api/surveys/${id}/`,
+    update: (id: string) => `${API_URL}/api/surveys/${id}/`,
+    delete: (id: string) => `${API_URL}/api/surveys/${id}/`,
+    results: (id: string) => `${API_URL}/api/surveys/${id}/results/`,
+  },
+  responses: {
+    create: (surveyId: string) => `${API_URL}/api/surveys/${surveyId}/responses/`,
+  },
+  auth: {
+    login: () => `${API_URL}/api/auth/login/`,
+    register: () => `${API_URL}/api/auth/register/`,
+  }
+};
 
 export const fetchSurvey = async (id: string, publicLink?: string) => {
   const url = publicLink 
-    ? `${API_BASE_URL}/surveys/${id}/public/${publicLink}/`
-    : `${API_BASE_URL}/surveys/${id}/`;
+    ? `${API_URL}/api/surveys/${id}/public/${publicLink}/`
+    : `${API_URL}/api/surveys/${id}/`;
   
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch survey');
@@ -20,7 +38,7 @@ export const submitSurveyResponse = async (data: {
     answer_text: string;
   }>;
 }) => {
-  const response = await fetch(`${API_BASE_URL}/responses/`, {
+  const response = await fetch(`${API_URL}/responses/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -57,7 +75,7 @@ export const createSurvey = async (data: {
 
   console.log('Sending survey data:', transformedData);
 
-  const response = await fetch(`${API_BASE_URL}/surveys/`, {
+  const response = await fetch(`${API_URL}/api/surveys/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -74,13 +92,13 @@ export const createSurvey = async (data: {
 };
 
 export const fetchSurveys = async () => {
-  const response = await fetch(`${API_BASE_URL}/surveys/`);
+  const response = await fetch(`${API_URL}/api/surveys/`);
   if (!response.ok) throw new Error('Failed to fetch surveys');
   return response.json();
 };
 
 export const fetchSurveyResults = async (id: string) => {
-  const response = await fetch(`${API_BASE_URL}/surveys/${id}/results/`);
+  const response = await fetch(`${API_URL}/api/surveys/${id}/results/`);
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || 'Failed to fetch survey results');

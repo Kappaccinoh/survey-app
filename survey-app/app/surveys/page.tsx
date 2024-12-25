@@ -6,12 +6,14 @@ import Navigation from '../components/Navigation';
 import { fetchSurveys } from '../services/api';
 import ResponseTrends from '../components/ResponseTrends';
 import CompletionRates from '../components/CompletionRates';
+import { api } from '../services/api';
 
 interface Survey {
   id: string;
   title: string;
   createdAt: string;
-  status: 'active' | 'draft' | 'closed';
+  status: 'published' | 'draft' | 'closed';
+  created_at: string;
   responseCount: number;
   publicLink?: string;
   description: string;
@@ -80,16 +82,31 @@ export default function Surveys() {
 
   const generatePublicLink = async (surveyId: string) => {
     try {
-      // Here you would implement the actual link generation logic
-      const link = `https://surveyapp.com/s/${Math.random().toString(36).substr(2, 9)}`;
+      // Generate frontend URL for the survey
+      const publicPath = `${process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin}/s/${surveyId}`;
       
-      // Mock API call
-      console.log('Generated link:', link);
+      // Update the backend with the public link
+      const response = await fetch(api.surveys.update(surveyId), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          public_link: publicPath,
+          status: 'published'  // Optionally publish the survey when generating link
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate public link');
+      }
+
+      const updatedSurvey = await response.json();
       
-      // Update the survey with the new link
-      setSelectedSurvey(prev => prev ? { ...prev, publicLink: link } : null);
-      console.log(surveyId);
-      return link;
+      // Update local state
+      setSelectedSurvey(prev => prev ? { ...prev, publicLink: publicPath } : null);
+      
+      return publicPath;
     } catch (error) {
       console.error('Error generating link:', error);
       return null;
@@ -286,7 +303,7 @@ export default function Surveys() {
                       <dt className="text-sm font-medium text-gray-500 truncate">Active Surveys</dt>
                       <dd className="flex items-baseline">
                         <div className="text-2xl font-semibold text-gray-900">
-                          {surveys.filter(s => s.status === 'active').length}
+                          {surveys.filter(s => s.status === 'published').length}
                         </div>
                       </dd>
                     </dl>
@@ -330,14 +347,14 @@ export default function Surveys() {
                             Created on {new Date(survey.createdAt).toLocaleDateString()}
                           </p>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium
-                            ${survey.status === 'active' 
+                            ${survey.status === 'published' 
                               ? 'bg-blue-50 text-blue-700' 
                               : survey.status === 'draft'
                               ? 'bg-gray-100 text-gray-700'
                               : 'bg-yellow-50 text-yellow-700'
                             }`}
                           >
-                            {survey.status.charAt(0).toUpperCase() + survey.status.slice(1)}
+                            {survey.status ? survey.status.charAt(0).toUpperCase() + survey.status.slice(1) : 'Unknown'}
                           </span>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700">
                             {survey.responseCount} {survey.responseCount === 1 ? 'response' : 'responses'}
