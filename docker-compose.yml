@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   frontend:
+    image: limjiawei/survey-app-frontend
     build: ./survey-app
     ports:
       - "3000:3000"
@@ -18,6 +19,7 @@ services:
       - backend
 
   backend:
+    image: limjiawei/survey-app-backend
     build: ./backend
     command: >
       sh -c "python3 manage.py migrate &&
@@ -27,8 +29,8 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=1
-      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,152.42.209.31
+      - CORS_ALLOWED_ORIGINS=http://152.42.209.31:3000
       - POSTGRES_DB=surveydb
       - POSTGRES_USER=surveyuser
       - POSTGRES_PASSWORD=password

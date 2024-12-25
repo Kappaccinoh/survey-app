@@ -26,7 +26,10 @@ SECRET_KEY = 'django-insecure-8=j3=1c7%r8hoeiddg)et=mdis54%zb&5jm7*50olmm9rai7-r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+
+# Make sure these are not overriding the environment variables somewhere else in the file
 
 
 # Application definition
@@ -130,11 +133,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://frontend:3000",
-]
 
 CORS_ALLOW_CREDENTIALS = True
 

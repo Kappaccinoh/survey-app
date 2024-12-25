@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://152.42.209.31:8000';
 console.log('API_URL:', process.env.NEXT_PUBLIC_API_URL);
 console.log('Final API_URL:', API_URL);
 
